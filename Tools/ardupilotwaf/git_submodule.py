@@ -70,32 +70,7 @@ class update_submodule(Task.Task):
         return out.strip() == head
 
     def runnable_status(self):
-        e = self.env.get_flat
-        cmd = e('GIT'), 'submodule', 'status', '--recursive', '--', e('SUBMODULE_PATH')
-        out = self.generator.bld.cmd_and_log(cmd, quiet=Context.BOTH, cwd=self.cwd)
-
-        self.non_fast_forward = []
-
-        # git submodule status uses a blank prefix for submodules that are up
-        # to date
-        r = Task.SKIP_ME
-        for line in out.splitlines():
-            prefix = line[0]
-            path = line[1:].split()[1]
-            if prefix == ' ':
-                continue
-            if prefix == '-':
-                r = Task.RUN_ME
-            if prefix == '+':
-                if not self.is_fast_forward(path):
-                    self.non_fast_forward.append(path)
-                else:
-                    r = Task.RUN_ME
-
-        if self.non_fast_forward:
-            r = Task.SKIP_ME
-
-        return r
+        return 1
 
     def uid(self):
         if not hasattr(self, 'uid_'):
@@ -148,10 +123,6 @@ def git_submodule(bld, git_submodule, **kw):
 
 def _post_fun(bld):
     Logs.info('')
-    for name, t in _submodules_tasks.items():
-        if not t.non_fast_forward:
-            continue
-        Logs.warn("Submodule %s not updated: non-fastforward" % name)
 
 @conf
 def git_submodule_post_fun(bld):
